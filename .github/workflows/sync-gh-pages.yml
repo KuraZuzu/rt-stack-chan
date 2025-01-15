@@ -1,0 +1,40 @@
+name: Sync main to gh-pages
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  sync:
+    runs-on: ubuntu-22.04
+    steps:
+      # 1) gh-pages をチェックアウト
+      - name: Check out gh-pages
+        uses: actions/checkout@v3
+        with:
+          ref: gh-pages
+          # pushまで一貫して同じ認証情報を使うなら
+          # persist-credentials: true
+          # (デフォルトでもONのはずですが、明示するならこう書く)
+
+      # 2) main を gh-pages にマージ
+      - name: Merge main into gh-pages
+        run: |
+          # git のユーザー設定
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+
+          # いま gh-pages ブランチ上にいる状態なので、
+          # 追加で fetch してから main をマージする
+
+          # ここでは "origin" という名前のリモートを利用すると仮定
+          # もしデフォルトで設定されていない場合は、再設定するなど
+          git fetch origin main
+
+          # --allow-unrelated-histories は、両ブランチに共通の祖先がないときに必須
+          git merge origin/main --allow-unrelated-histories -m "Sync from main"
+
+          # コンフリクトがあればここで解消
+
+          # gh-pages に push
+          git push origin HEAD:gh-pages
